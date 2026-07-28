@@ -18,7 +18,7 @@ $data = Get-Date -Format "dd/MM/yyyy"
 $nome = "$data - Resumo diario de emails e pendencias"
 $antes = @(Get-Process claude -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
 Start-Process -FilePath "cmd.exe" `
-    -ArgumentList ('/c cd /d "' + $projeto + '" && "' + $env:USERPROFILE + '\.local\bin\claude.exe" --allowedTools "Read,Glob,Grep" --remote-control "' + $nome + '"') `
+    -ArgumentList ('/c title SESSAO DO DIA (Claude) - NAO FECHAR ^| minimizar apenas && cd /d "' + $projeto + '" && "' + $env:USERPROFILE + '\.local\bin\claude.exe" --allowedTools "Read,Glob,Grep" --remote-control "' + $nome + '"') `
     -WorkingDirectory $projeto -WindowStyle Minimized | Out-Null
 Start-Sleep 8
 $novo = Get-Process claude -ErrorAction SilentlyContinue | Where-Object { $antes -notcontains $_.Id } |
