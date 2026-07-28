@@ -16,3 +16,4 @@ briefing-log.txt
 __pycache__/
 .claude/settings.local.json
 .claude/
+sessao_dia.*

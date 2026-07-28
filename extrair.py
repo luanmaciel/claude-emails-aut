@@ -35,20 +35,29 @@ RE_BIBLIO_REMETENTE = re.compile(
     r"3shape|meditcompany|sin360|sindentalusa", re.I)
 
 
+TAG_BH = "BioHorizons"
+RE_BH = re.compile(r"biohorizons|pro ?zygoma", re.I)
+
+
 def marcar_biblioteca(item, email):
-    """Aplica a categoria Bibliotecas em emails da SIN sobre bibliotecas digitais."""
+    """Aplica categorias Bibliotecas e BioHorizons em emails da SIN (única escrita no Outlook)."""
     if "sinimplantsystem" not in email["conta"]:
-        return
-    if not (RE_BIBLIO.search(email["assunto"]) or RE_BIBLIO_REMETENTE.search(email["remetente_smtp"])):
         return
     if RE_NOREPLY.search(email["remetente_smtp"]) or RE_UNSUBSCRIBE.search(email["corpo"].lower()):
         return  # marketing/newsletter não ganha tag
-    cats = [c.strip() for c in (email["categoria"] or "").split(",") if c.strip()]
-    if TAG_BIBLIO in cats:
+    novas = []
+    if RE_BIBLIO.search(email["assunto"]) or RE_BIBLIO_REMETENTE.search(email["remetente_smtp"]):
+        novas.append(TAG_BIBLIO)
+    if RE_BH.search(email["assunto"]) or RE_BH.search(email["remetente_smtp"]):
+        novas.append(TAG_BH)
+    if not novas:
         return
-    cats.append(TAG_BIBLIO)
+    cats = [c.strip() for c in (email["categoria"] or "").split(",") if c.strip()]
+    faltantes = [t for t in novas if t not in cats]
+    if not faltantes:
+        return
     try:
-        item.Categories = ", ".join(cats)
+        item.Categories = ", ".join(cats + faltantes)
         item.Save()
         email["categoria"] = item.Categories
     except Exception:
