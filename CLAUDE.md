@@ -1,6 +1,6 @@
 # Projeto: triagem-email (central diária do Luan)
 
-Rotina diária: 07:30 triagem de emails (Outlook COM → emails.json → triagem/AAAA-MM-DD.md + vaults contexto/), 07:45–07:55 briefings dos projetos (Bibliotecas, Fábrica, Howwiki), 08:05 resumo consolidado em `triagem/RESUMO-DIA.md`.
+Rotina diária: 07:30 triagem de emails (Outlook COM → emails.json → triagem/AAAA-MM-DD.md + vaults contexto/), 07:45–07:55 briefings dos projetos (Bibliotecas, Fábrica, Howwiki), 08:05 resumo consolidado em `triagem/RESUMO-DIA.md`. A sessão do dia é aberta MANUALMENTE pelo Luan (celular ou PC) — não há sessão automática.
 
 ## Ao abrir a sessão ("bom dia", "resumo", primeiro contato do dia)
 Leia `triagem/RESUMO-DIA.md` (e a triagem do dia se precisar de detalhe) e apresente o resumo: bloco SIN primeiro, Biomecânica depois. Ofereça os próximos passos (rascunhos a disparar, decisões pendentes). Não repita o que já foi tratado em dias anteriores (ver vaults contexto/).
