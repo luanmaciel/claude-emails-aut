@@ -1,5 +1,6 @@
 # DADOS DE EMAIL — NUNCA versionar
 emails*.json
+cobrancas.json
 *.msg
 emails-sin/
 emais-biomecanica/
