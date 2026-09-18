@@ -175,5 +175,97 @@ class TesteParadas(unittest.TestCase):
         self.assertIn("Alvo", [p["assunto"] for p in paradas])
 
 
+class ContaFalsa:
+    def __init__(self, smtp, store):
+        self.SmtpAddress = smtp
+        self.DeliveryStore = store
+
+
+class StoreComIdFalso(StoreFalso):
+    def __init__(self, store_id, nome, inbox, enviados):
+        super().__init__(inbox, enviados)
+        self.StoreID = store_id
+        self.DisplayName = nome
+
+
+class NamespaceFalso:
+    def __init__(self, stores, contas):
+        self.Stores = stores
+        self.Accounts = contas
+
+
+class AppFalso:
+    def __init__(self, ns):
+        self._ns = ns
+
+    def GetNamespace(self, _):
+        return self._ns
+
+
+class TesteMain(unittest.TestCase):
+    """Ponta a ponta: Dispatch -> varredura das duas contas -> cobrancas.json.
+
+    main() marca a hora com datetime.now(), entao aqui os itens sao datados pelo
+    mesmo relogio -- com o AGORA fixo do resto do arquivo, dias_parado sairia
+    deslocado pela diferenca entre os dois.
+    """
+
+    def test_gera_json_das_duas_contas(self):
+        import json
+        import os
+        import tempfile
+
+        agora = datetime.datetime.now()
+
+        def atras(n):
+            return agora - datetime.timedelta(days=n, minutes=1)
+
+        sin = StoreComIdFalso(
+            "S1", "SIN",
+            PastaFalsa(),
+            PastaFalsa([ItemFalso("C1", atras(14), "Dongle Exoplan", ["suporte@fornecedor.com"])]),
+        )
+        bio = StoreComIdFalso(
+            "S2", "Biomecanica",
+            PastaFalsa([ItemFalso("C3", atras(2))]),  # responderam: nao e cobranca
+            PastaFalsa([
+                ItemFalso("C2", atras(9), "Proposta de exportacao", ["compras@cliente.com"]),
+                ItemFalso("C3", atras(5), "Pedido em aberto", ["fabrica@cliente.com"]),
+            ]),
+        )
+        orfao = StoreComIdFalso("S3", "Arquivo local", PastaFalsa(), PastaFalsa())  # sem conta: ignorado
+
+        ns = NamespaceFalso(
+            [sin, bio, orfao],
+            [ContaFalsa("luan@sinimplantsystem.com", sin), ContaFalsa("luan@biomecanica.com.br", bio)],
+        )
+        cobrancas.win32com.client.Dispatch = lambda *a, **k: AppFalso(ns)
+
+        argv, cwd = sys.argv, os.getcwd()
+        tmp = tempfile.mkdtemp()
+        try:
+            sys.argv = ["cobrancas.py", "60", "4"]
+            os.chdir(tmp)
+            cobrancas.main()
+            with open("cobrancas.json", encoding="utf-8") as f:
+                saida = json.load(f)
+        finally:
+            sys.argv, _ = argv, os.chdir(cwd)
+
+        self.assertEqual(saida["janela_dias"], 60)
+        self.assertEqual(saida["min_dias_parado"], 4)
+        # o store sem conta associada nao entra
+        self.assertEqual([c["conta"] for c in saida["contas"]],
+                         ["luan@sinimplantsystem.com", "luan@biomecanica.com.br"])
+
+        sin_saida, bio_saida = saida["contas"]
+        self.assertEqual([p["assunto"] for p in sin_saida["paradas"]], ["Dongle Exoplan"])
+        self.assertEqual(sin_saida["paradas"][0]["dias_parado"], 14)
+        # C3 teve resposta depois do envio: some da lista
+        self.assertEqual([p["assunto"] for p in bio_saida["paradas"]], ["Proposta de exportacao"])
+        # nada de datetime cru sobrando: o json.dump so passa porque tudo virou string
+        self.assertIsInstance(sin_saida["paradas"][0]["enviado_em"], str)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
