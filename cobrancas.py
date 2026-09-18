@@ -23,9 +23,9 @@ RE_NOREPLY = re.compile(r"no.?reply|donotreply|newsletter|mailer-daemon", re.I)
 RE_AUTO = re.compile(r"automatic reply|resposta automática|out of office|ausência do escritório", re.I)
 
 
-def data_do_item(item):
-    """SentOn nos enviados, ReceivedTime nos recebidos; None se nenhum servir."""
-    for campo in ("SentOn", "ReceivedTime"):
+def data_de(item, campos):
+    """Primeiro campo de data que responder, sem tzinfo; None se nenhum servir."""
+    for campo in campos:
         try:
             dt = getattr(item, campo)
         except Exception:
@@ -42,24 +42,32 @@ def iterar_recentes(pasta, cutoff):
     """Itens de mail mais novos que cutoff, do mais novo para o mais antigo.
 
     Nao usa Restrict: o filtro por data depende do locale do Windows (ver README).
+    O corte usa o MESMO campo da ordenacao (ReceivedTime), senao um item cujo
+    SentOn seja bem mais antigo que o ReceivedTime interrompe a varredura cedo e
+    esconde cobrancas. Se o Sort falhar, a ordem e arbitraria: varre tudo em vez
+    de cortar no primeiro item antigo.
     """
     items = pasta.Items
     try:
         items.Sort("[ReceivedTime]", True)
+        ordenado = True
     except Exception:
-        pass
+        ordenado = False
     for item in items:
-        dt = data_do_item(item)
-        if dt is None:
+        ordem = data_de(item, ("ReceivedTime", "SentOn"))
+        if ordem is None:
             continue
-        if dt < cutoff:
-            break
+        if ordem < cutoff:
+            if ordenado:
+                break
+            continue
         try:
             if item.Class != 43:  # olMail
                 continue
         except Exception:
             continue
-        yield item, dt
+        # nos enviados o que vale e a data de envio; nos recebidos, a de chegada
+        yield item, data_de(item, ("SentOn", "ReceivedTime")) or ordem
 
 
 def pastas_de_entrada(inbox):

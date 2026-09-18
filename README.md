@@ -27,6 +27,7 @@ Tudo agendado no Task Scheduler do Windows (`schtasks`), rodando com a sessão d
 | `abrir_sessao_dia.ps1` | Abre a sessão do dia em remote-control (oculta), mata a de ontem |
 | `cobrancas.py` | Varre os Itens Enviados e lista threads sem resposta (sem LLM), gera `cobrancas.json` |
 | `cobrancas-prompt.md` | Prompt sob demanda: transforma `cobrancas.json` em `triagem/COBRANCAS-PARADAS.md` |
+| `teste_cobrancas.py` | Testes do miolo do `cobrancas.py` com Outlook falso (rodam em qualquer SO) |
 | `enviar.py` | Envia UM rascunho existente do Outlook (guardrail: nunca compõe e envia direto) |
 | `CLAUDE.md` | Regras da sessão: "bom dia" apresenta o resumo; fluxo de envio; segurança |
 
@@ -53,6 +54,9 @@ voltou depois do meu envio, ordenadas por dias parados. Roda sob demanda, não n
 .\rodar_cobrancas.ps1              # janela 60 dias, reporta o que está parado há 4+ dias
 .\rodar_cobrancas.ps1 90 7         # janela 90 dias, só o que está parado há 7+ dias
 ```
+
+`python teste_cobrancas.py` exercita o pareamento, a varredura de subpastas e os cortes com um
+Outlook falso — roda sem Windows e sem Outlook. A camada COM em si só dá para validar na máquina.
 
 Limites: pareamento por `ConversationID` não enxerga a resposta que veio como email novo, e
 respostas arquivadas fora da Inbox não são vistas. Ambos aparecem como falso "parado", nunca
@@ -92,4 +96,5 @@ como falso "respondido" — o erro cai para o lado seguro.
 - **v6** — briefings diários por projeto (cada projeto com CLAUDE.md + plano vivo).
 - **v7** — resumo consolidado de celular + sessão do dia em remote-control aberta por agendamento.
 - **v8** — varredura de cobranças paradas sob demanda (`cobrancas.py`), cobrindo o ponto cego
-  do pré-filtro: threads em que eu falei por último e ninguém respondeu.
+  do pré-filtro: threads em que eu falei por último e ninguém respondeu. Primeiros testes
+  automatizados do projeto, com Outlook falso.
