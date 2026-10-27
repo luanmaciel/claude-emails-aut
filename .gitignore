@@ -1,0 +1,22 @@
+# DADOS DE EMAIL — NUNCA versionar
+emails*.json
+*.msg
+emails-alfa/
+emais-beta/
+hist/
+triagem/
+contexto/
+ignorados.txt
+
+# runtime
+*.pid
+*.log
+log-*.txt
+briefing-log.txt
+__pycache__/
+.claude/settings.local.json
+.claude/
+sessao_dia.*
+
+*.pptx
+*.msg

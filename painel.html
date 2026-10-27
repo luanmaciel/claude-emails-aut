@@ -1,0 +1,235 @@
+<title>Mesa de Emails</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#EEF1F4;--surface:#FFFFFF;--surface2:#F7F9FB;--line:#D6DCE3;--ink:#1B2430;--muted:#5B6673;
+  --alfa:#0F7B8A;--alfa-soft:#E1F1F3;--beta:#3B5BA5;--beta-soft:#E4E9F6;
+  --warn:#B7791F;--warn-soft:#FBF1DD;--crit:#B23A3A;--crit-soft:#F8E3E3;--ok:#2F7D4F;--ok-soft:#E1F0E6;
+  --shadow:0 1px 2px rgba(27,36,48,.08),0 4px 12px rgba(27,36,48,.06);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141A21;--surface:#1D242D;--surface2:#232B35;--line:#323C47;--ink:#E6EAEE;--muted:#98A3AE;
+  --alfa:#4FB3C1;--alfa-soft:#153B41;--beta:#8FA6E0;--beta-soft:#25304A;
+  --warn:#E0A64A;--warn-soft:#3D2F16;--crit:#E07070;--crit-soft:#3F2222;--ok:#67B98A;--ok-soft:#1E3A2A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 12px rgba(0,0,0,.3);
+}}
+:root[data-theme="dark"]{
+  --bg:#141A21;--surface:#1D242D;--surface2:#232B35;--line:#323C47;--ink:#E6EAEE;--muted:#98A3AE;
+  --alfa:#4FB3C1;--alfa-soft:#153B41;--beta:#8FA6E0;--beta-soft:#25304A;
+  --warn:#E0A64A;--warn-soft:#3D2F16;--crit:#E07070;--crit-soft:#3F2222;--ok:#67B98A;--ok-soft:#1E3A2A;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 12px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums}
+header{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;padding:18px 24px 10px}
+header h1{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em}
+header .meta{color:var(--muted);font-size:12px}
+header .sp{flex:1}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:5px 10px}
+button:hover{background:var(--surface2)}
+button:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--alfa);outline-offset:2px}
+button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+button.primary:hover{opacity:.9}
+button:disabled{opacity:.5;cursor:default}
+.totais{display:flex;gap:8px;flex-wrap:wrap;padding:0 24px 14px}
+.tot{display:flex;align-items:baseline;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:12px;color:var(--muted)}
+.tot b{color:var(--ink);font-size:14px}
+#aviso{margin:0 24px 12px;padding:8px 12px;border-radius:6px;background:var(--warn-soft);color:var(--ink);font-size:13px}
+#resumo{margin:0 24px 16px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 18px;max-width:900px}
+#resumo summary{cursor:pointer;font-weight:500;list-style:none}
+#resumo summary::before{content:"▸ ";color:var(--muted)}
+#resumo[open] summary::before{content:"▾ "}
+#resumo .md{margin-top:10px;font-size:13.5px;max-width:70ch}
+#resumo .md h2{font-size:14px;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+#resumo .md p{margin:6px 0}
+#resumo .md ol,#resumo .md ul{padding-left:20px;margin:4px 0}
+#resumo .md li{margin:4px 0}
+.raia{padding:0 24px 20px}
+.raia-h{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.raia-h::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--cor)}
+.raia[data-emp="ALFA"]{--cor:var(--alfa);--cor-soft:var(--alfa-soft)}
+.raia[data-emp="BETA"]{--cor:var(--beta);--cor-soft:var(--beta-soft)}
+.board{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:12px;overflow-x:auto}
+.col{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px;min-height:80px;display:flex;flex-direction:column;gap:8px}
+.col-h{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;padding:0 2px 4px}
+.col-h b{font-family:"IBM Plex Mono",monospace;color:var(--ink);font-weight:500}
+.col.vazia::after{content:"nada aqui";color:var(--muted);font-size:12px;text-align:center;padding:10px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--cor);border-radius:6px;padding:10px 12px;box-shadow:var(--shadow)}
+.card .top{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.card .rem{font-weight:600}
+.card .dias{font-family:"IBM Plex Mono",monospace;font-size:11px;padding:1px 6px;border-radius:4px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.card .dias.warn{background:var(--warn-soft);color:var(--warn)}
+.card .dias.crit{background:var(--crit-soft);color:var(--crit)}
+.card .ass{color:var(--muted);font-size:12.5px;margin:2px 0 6px;overflow-wrap:anywhere}
+.card .pedido{font-size:13px}
+.card details{margin-top:8px}
+.card summary{cursor:pointer;font-size:12px;color:var(--muted);list-style:none}
+.card summary::before{content:"▸ ";}
+.card details[open] summary::before{content:"▾ "}
+.card .bloco{margin-top:8px;font-size:13px}
+.card .bloco h4{margin:0 0 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.card pre{white-space:pre-wrap;font:inherit;margin:0;background:var(--surface2);border-radius:6px;padding:8px 10px;max-height:260px;overflow:auto}
+.card .acoes{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.card select{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);padding:4px 6px;margin-left:auto}
+.cmd{margin-top:8px;font-size:12px;padding:6px 8px;border-radius:6px;background:var(--surface2);border:1px dashed var(--line)}
+.cmd.pendente{border-color:var(--warn);background:var(--warn-soft)}
+.cmd.feito{border-color:var(--ok);background:var(--ok-soft)}
+.cmd.erro{border-color:var(--crit);background:var(--crit-soft)}
+.cmd .quando{font-family:"IBM Plex Mono",monospace;color:var(--muted);margin-left:6px}
+dialog{border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:18px;width:min(520px,92vw);box-shadow:var(--shadow)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+dialog h3{margin:0 0 6px;font-size:15px}
+dialog p{margin:0 0 10px;color:var(--muted);font-size:13px}
+dialog textarea{width:100%;min-height:110px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:6px;padding:8px;background:var(--surface2);color:var(--ink);resize:vertical}
+dialog .btns{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+@media (max-width:760px){
+  header,.totais,.raia,#resumo,#aviso{padding-left:12px;padding-right:12px;margin-left:0;margin-right:0}
+  #resumo{margin:0 12px 16px}
+  .board{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){.card{transition:box-shadow .15s}}
+</style>
+
+<header>
+  <h1>Mesa de Emails</h1>
+  <span class="meta mono" id="gerado">carregando…</span>
+  <span class="sp"></span>
+  <button id="btn-recarregar" title="Reler o banco">Atualizar</button>
+</header>
+<div class="totais" id="totais"></div>
+<div id="aviso" hidden></div>
+<details id="resumo"><summary>Resumo do dia</summary><div class="md" id="resumo-md"></div></details>
+
+<section class="raia" data-emp="ALFA"><h2 class="raia-h">Alfa</h2><div class="board" id="board-ALFA"></div></section>
+<section class="raia" data-emp="BETA"><h2 class="raia-h">Beta</h2><div class="board" id="board-BETA"></div></section>
+
+<dialog id="dlg">
+  <form method="dialog">
+    <h3 id="dlg-t"></h3>
+    <p id="dlg-p"></p>
+    <textarea id="dlg-txt" placeholder="Escreva a instrução para o Claude"></textarea>
+    <div class="btns"><button value="cancel">Cancelar</button><button value="ok" class="primary" id="dlg-ok">Enviar ao Claude</button></div>
+  </form>
+</dialog>
+
+<script>
+const COLS=[["mapeado","Mapeado"],["acao","Aguardando minha ação"],["aguardando","Aguardando resposta deles"],["encerrado","Encerrado"]];
+const state={cards:{},comandos:{},overrides:{},meta:null,db:null};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function dias(iso){if(!iso)return null;return Math.floor((Date.now()-new Date(iso))/864e5);}
+function colunaDe(c){return state.overrides[c.id]?.coluna||c.coluna_auto||"mapeado";}
+
+function mdLite(md){
+  // ponytail: só o que o RESUMO-DIA usa (##, listas numeradas/bullets, negrito, itálico, →)
+  const out=[];let lista=null;
+  const inline=t=>esc(t).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/\*(.+?)\*/g,"<i>$1</i>").replace(/`(.+?)`/g,"<code>$1</code>");
+  const fecha=()=>{if(lista){out.push(`</${lista}>`);lista=null;}};
+  for(const raw of md.split("\n")){
+    const l=raw.trimEnd();
+    if(!l.trim()||/^#\s/.test(l)||/^-{3,}$/.test(l)){fecha();continue;}
+    if(/^##\s/.test(l)){fecha();out.push(`<h2>${inline(l.replace(/^##\s+/,""))}</h2>`);continue;}
+    let m;
+    if((m=l.match(/^\s*(\d+)\.\s+(.*)/))){if(lista!=="ol"){fecha();out.push("<ol>");lista="ol";}out.push(`<li>${inline(m[2])}</li>`);continue;}
+    if((m=l.match(/^\s*[-•]\s+(.*)/))){if(lista!=="ul"){fecha();out.push("<ul>");lista="ul";}out.push(`<li>${inline(m[1])}</li>`);continue;}
+    if(/^\s+→/.test(l)&&lista){out[out.length-1]=out[out.length-1].replace(/<\/li>$/,`<br>${inline(l.trim())}</li>`);continue;}
+    fecha();out.push(`<p>${inline(l)}</p>`);
+  }
+  fecha();return out.join("");
+}
+
+function render(){
+  const cards=Object.values(state.cards);
+  const tot={};for(const [k] of COLS)tot[k]=0;
+  for(const c of cards)tot[colunaDe(c)]=(tot[colunaDe(c)]||0)+1;
+  $("#totais").innerHTML=COLS.map(([k,n])=>`<span class="tot">${esc(n)} <b>${tot[k]||0}</b></span>`).join("");
+  $("#gerado").textContent=state.meta?.gerado_em?`atualizado ${state.meta.gerado_em.replace("T"," ")}`:"sem dados ainda";
+  $("#resumo-md").innerHTML=state.meta?.resumo?mdLite(state.meta.resumo):"<p>Resumo do dia ainda não publicado.</p>";
+  for(const emp of ["ALFA","BETA"]){
+    const board=$("#board-"+emp);board.innerHTML="";
+    for(const [k,nome] of COLS){
+      const lista=cards.filter(c=>c.empresa===emp&&colunaDe(c)===k)
+        .sort((a,b)=>(a.recebido||"").localeCompare(b.recebido||""));
+      const col=document.createElement("div");col.className="col"+(lista.length?"":" vazia");
+      col.innerHTML=`<div class="col-h"><span>${nome}</span><b>${lista.length}</b></div>`;
+      for(const c of lista)col.appendChild(cardEl(c,k));
+      board.appendChild(col);
+    }
+  }
+}
+
+function cardEl(c,col){
+  const d=dias(col==="aguardando"?c.respondido||c.recebido:c.recebido);
+  const cls=d>=7?"crit":d>=3?"warn":"";
+  const el=document.createElement("article");el.className="card";
+  const cmds=Object.values(state.comandos).filter(x=>x.card===c.id).sort((a,b)=>(b.criado||"").localeCompare(a.criado||"")).slice(0,2);
+  el.innerHTML=`
+    <div class="top"><span class="rem">${esc(c.remetente)}</span><span class="dias ${cls}" title="${col==="aguardando"?"dias desde a minha resposta":"dias desde o email"}">${d==null?"":d+"d"}</span></div>
+    <div class="ass">${esc(c.assunto)}</div>
+    <div class="pedido">${esc(c.pedido)}</div>
+    <details>
+      <summary>Ação proposta e rascunho</summary>
+      ${c.acao?`<div class="bloco"><h4>Ação proposta</h4><div>${esc(c.acao)}</div></div>`:""}
+      ${c.rascunho?`<div class="bloco"><h4>Rascunho (já salvo no Outlook)</h4><pre>${esc(c.rascunho)}</pre></div>`:""}
+      ${c.dossie?`<div class="bloco"><h4>Dossiê</h4><code class="mono">${esc(c.dossie)}</code></div>`:""}
+    </details>
+    <div class="acoes">
+      <button data-cmd="manda" class="primary" ${c.rascunho?"":"disabled"}>Manda</button>
+      <button data-cmd="ajusta">Ajusta…</button>
+      <button data-cmd="faz">Faz…</button>
+      <select aria-label="Mover coluna">${COLS.map(([k,n])=>`<option value="${k}" ${k===col?"selected":""}>${n}</option>`).join("")}</select>
+    </div>
+    ${cmds.map(x=>`<div class="cmd ${esc(x.status)}"><b>${esc(x.tipo)}</b>${x.texto?": "+esc(x.texto):""} · ${esc(x.status)}${x.resposta?" · "+esc(x.resposta):""}<span class="quando">${esc((x.criado||"").slice(5,16).replace("T"," "))}</span></div>`).join("")}`;
+  el.querySelectorAll("button[data-cmd]").forEach(b=>b.addEventListener("click",()=>comando(c,b.dataset.cmd)));
+  el.querySelector("select").addEventListener("change",e=>mover(c,e.target.value));
+  return el;
+}
+
+async function comando(c,tipo){
+  if(!state.db)return alerta("Sem conexão com o banco: não dá para enviar comandos daqui.");
+  let texto="";
+  if(tipo!=="manda"){
+    texto=await pedirTexto(tipo==="ajusta"?"Ajustar o rascunho":"Executar uma ação",
+      tipo==="ajusta"?`O que muda na resposta para ${c.remetente}?`:`O que o Claude deve fazer sobre "${c.assunto}"? (a proposta: ${c.acao||"ver dossiê"})`);
+    if(texto==null)return;
+  }else{
+    const ok=await pedirTexto("Enviar pelo Outlook",`O Claude vai mostrar o texto final no chat e enviar para ${c.remetente} depois da sua confirmação lá. Quer prosseguir?`,false);
+    if(ok==null)return;
+  }
+  const id=Date.now().toString(36)+"-"+c.id.slice(-6);
+  try{
+    await state.db.doc("comandos/"+id).set({card:c.id,entry_id:c.entry_id,empresa:c.empresa,remetente:c.remetente,assunto:c.assunto,tipo,texto,status:"pendente",criado:new Date().toISOString().slice(0,16)});
+  }catch(e){alerta("Não consegui gravar o comando ("+(e.code||"erro")+"). Tente de novo.");}
+}
+async function mover(c,coluna){
+  if(!state.db)return alerta("Sem conexão com o banco.");
+  try{await state.db.doc("overrides/"+c.id).set({coluna,movido_em:new Date().toISOString().slice(0,16)});}
+  catch(e){alerta("Não consegui mover ("+(e.code||"erro")+").");}
+}
+function pedirTexto(t,p,comTexto=true){
+  return new Promise(res=>{
+    const d=$("#dlg"),ta=$("#dlg-txt");$("#dlg-t").textContent=t;$("#dlg-p").textContent=p;ta.value="";ta.hidden=!comTexto;
+    $("#dlg-ok").textContent=comTexto?"Enviar ao Claude":"Confirmar";
+    d.onclose=()=>res(d.returnValue!=="ok"?null:comTexto?(ta.value.trim()||null):"");
+    d.showModal();if(comTexto)ta.focus();
+  });
+}
+function alerta(msg){const a=$("#aviso");a.textContent=msg;a.hidden=false;clearTimeout(a._t);a._t=setTimeout(()=>a.hidden=true,6000);}
+
+async function ligar(){
+  render();
+  const db=await claude.use("db");
+  if(!db){alerta("Banco indisponível nesta visualização: painel só de leitura, sem dados ao vivo.");return;}
+  state.db=db;
+  db.collection("cards").onSnapshot(snap=>{state.cards={};for(const d of snap.docs)state.cards[d.id]={id:d.id,...d.data()};render();},e=>alerta("Erro ao ler cards: "+e.code));
+  db.collection("comandos").onSnapshot(snap=>{state.comandos={};for(const d of snap.docs)state.comandos[d.id]=d.data();render();},()=>{});
+  db.collection("overrides").onSnapshot(snap=>{state.overrides={};for(const d of snap.docs)state.overrides[d.id]=d.data();render();},()=>{});
+  db.doc("meta/painel").onSnapshot(s=>{state.meta=s.exists?s.data():null;render();},()=>{});
+  $("#btn-recarregar").addEventListener("click",async()=>{const s=await db.doc("meta/painel").get();state.meta=s.exists?s.data():null;render();
+    // ponytail: o botão só relê o banco; dado novo só entra quando a sessão roda painel.py + write_db
+    const d=dias(state.meta?.gerado_em);alerta(d==null?"Banco relido, mas ainda sem painel gerado.":d<1?"Banco relido: painel gerado hoje.":`Banco relido: o último painel foi gerado há ${d} dia${d>1?"s":""}. Dado novo só entra quando a rotina ou a sessão do dia roda painel.py (peça "atualiza o painel" no chat).`);});
+}
+ligar();
+</script>
